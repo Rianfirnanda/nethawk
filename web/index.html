@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetHawk</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+
+  <!-- ================= Nav rail ================= -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">◆</div>
+      <div class="brand-name">NET<span>HAWK</span></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="dashboard"><span class="ic">▚</span> Dashboard</button>
+      <button class="nav-item" data-view="devices"><span class="ic">▣</span> Perangkat</button>
+      <button class="nav-item" data-view="activity"><span class="ic">◉</span> Aktivitas</button>
+      <button class="nav-item" data-view="firewall"><span class="ic">⬢</span> Blokir Situs</button>
+      <button class="nav-item" data-view="protection"><span class="ic">◈</span> Proteksi</button>
+      <button class="nav-item" data-view="bisnis"><span class="ic">⬡</span> Bisnis</button>
+      <button class="nav-item" data-view="settings"><span class="ic">⚙</span> Setelan</button>
+    </nav>
+    <div class="rail-foot">
+      <div class="conn"><span id="conn-dot" class="dot"></span><span id="conn-text">menyambung…</span></div>
+      <div id="net-foot" class="net-foot">—</div>
+    </div>
+  </aside>
+
+  <!-- ================= Main ================= -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">Dashboard</h1>
+        <div id="net-summary" class="muted">memuat jaringan…</div>
+      </div>
+      <div class="top-actions">
+        <button id="btn-scan" class="btn btn-primary"><span class="ic">⟳</span> Scan Jaringan</button>
+      </div>
+    </header>
+
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view">
+      <div class="stat-row" id="stat-row">
+        <div class="stat" data-k="total"><div class="stat-b"><div class="stat-t">Active Hosts</div><div class="stat-v" data-v="total">0</div></div><div class="stat-ic">▦</div></div>
+        <div class="stat"><div class="stat-b"><div class="stat-t">Live Throughput</div><div class="stat-v" id="sv-tput">0</div></div><div class="stat-ic">↯</div></div>
+        <div class="stat"><div class="stat-b"><div class="stat-t">Active Flows</div><div class="stat-v" id="sv-flows">0</div></div><div class="stat-ic">⇄</div></div>
+        <div class="stat"><div class="stat-b"><div class="stat-t">Protokol</div><div class="stat-v" id="sv-proto">0</div></div><div class="stat-ic">◉</div></div>
+        <div class="stat" data-k="alert"><div class="stat-b"><div class="stat-t">Alerts</div><div class="stat-v" id="sv-alerts">0</div></div><div class="stat-ic">⚠</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h2>Traffic</h2>
+            <div class="legend"><span class="lg lg-dl"><i></i> ↓ <b id="cur-dl">0</b></span><span class="lg lg-ul"><i></i> ↑ <b id="cur-ul">0</b></span></div>
+          </div>
+          <canvas id="chart"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Top Protokol</h2><span class="muted" style="font-size:11px">observed</span></div>
+          <div class="donut-wrap"><canvas id="donut" width="160" height="160"></canvas><div id="donut-legend" class="donut-legend"></div></div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="panel"><div class="panel-head"><h2>Top Hosts</h2></div><div id="top-hosts" class="rank"></div></div>
+        <div class="panel"><div class="panel-head"><h2>Top Aplikasi</h2></div><div id="top-apps" class="rank"><div class="empty">Awasi perangkat untuk melihat aplikasi.</div></div></div>
+        <div class="panel"><div class="panel-head"><h2>Top Endpoints</h2></div><div id="top-endpoints" class="rank"></div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h2>Recent Alerts</h2></div><div id="alerts-list" class="feed"><div class="empty">Tidak ada alert.</div></div></div>
+        <div class="panel"><div class="panel-head"><h2>Interface Status</h2></div><div id="iface-status" class="iface"></div></div>
+      </div>
+    </section>
+
+    <!-- Devices -->
+    <section id="view-devices" class="view hidden">
+      <div class="toolbar">
+        <input id="dev-search" class="input" style="max-width:230px" placeholder="⌕ cari nama / IP / vendor" autocomplete="off">
+        <span id="dev-count" class="muted">0 perangkat</span>
+        <span class="spacer"></span>
+        <button class="btn" data-act="monitor_all">◎ Awasi Semua</button>
+        <button class="btn" data-act="unmonitor_all">Berhenti Awasi</button>
+        <button class="btn btn-danger" data-act="cutall"><span class="ic">✕</span> Putus Semua</button>
+        <button class="btn" data-act="restoreall"><span class="ic">✓</span> Pulihkan Semua</button>
+      </div>
+      <div id="device-grid" class="device-grid">
+        <div class="empty big">Belum ada perangkat. Klik <b>Scan Jaringan</b>.</div>
+      </div>
+    </section>
+
+    <!-- Activity: what each device is opening -->
+    <section id="view-activity" class="view hidden">
+      <div class="hint" style="margin-bottom:14px">Situs/aplikasi yang sedang dibuka tiap perangkat (dari DNS & SNI). Hanya untuk perangkat yang <b>Diawasi</b> + <b>IP Forwarding</b> aktif — pasif tak bisa melihat trafik perangkat lain di Wi-Fi.</div>
+      <div id="activity-grid" class="device-grid"></div>
+    </section>
+
+    <!-- Firewall -->
+    <section id="view-firewall" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>Kategori Cepat</h2></div>
+        <div class="hint">Berlaku untuk perangkat yang <b>Dikelola</b>. Butuh IP forwarding aktif (Setelan).</div>
+        <div id="categories" class="cats"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Domain Kustom (global)</h2></div>
+        <div class="row-add">
+          <input id="fw-input" class="input" placeholder="mis. tiktok.com" autocomplete="off">
+          <button id="fw-add" class="btn btn-primary">Tambah</button>
+        </div>
+        <div id="fw-list" class="chips"></div>
+      </div>
+    </section>
+
+    <!-- Protection -->
+    <section id="view-protection" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>Proteksi ARP (Anti-NetCut)</h2></div>
+        <div class="toggle-row">
+          <div><div id="prot-stat" class="toggle-label">Nonaktif</div><div class="muted">Deteksi & tangkis serangan ARP ke PC-mu.</div></div>
+          <label class="switch"><input type="checkbox" id="prot-switch"><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Log Serangan</h2></div>
+        <div id="attack-feed" class="feed"></div>
+      </div>
+    </section>
+
+    <!-- Bisnis / Hotspot Controller -->
+    <section id="view-bisnis" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>Hotspot Controller</h2></div>
+        <div class="hint">Kebijakan otomatis untuk tamu, berlaku ke perangkat role <b>Guest</b> (Staff dikecualikan). Kuota data & limit butuh IP forwarding aktif (Setelan).</div>
+        <div class="set-row"><div><div class="set-t">Auto-blokir perangkat baru</div><div class="muted">Perangkat asing otomatis diputus sampai di-approve (tombol Pulihkan).</div></div><label class="switch"><input type="checkbox" id="s-autoblock"><span class="slider"></span></label></div>
+        <div class="set-row"><div><div class="set-t">Mode Tamu — batas kecepatan</div><div class="muted">0 = tanpa batas. Berlaku ke semua Guest.</div></div><div class="set-inp"><input id="s-kbps" class="input" type="number" min="0" value="0"> <span class="muted">kbps</span></div></div>
+        <div class="set-row"><div><div class="set-t">Kuota data / perangkat</div><div class="muted">0 = tanpa kuota. Lewat batas → auto-putus.</div></div><div class="set-inp"><input id="s-mb" class="input" type="number" min="0" value="0"> <span class="muted">MB</span></div></div>
+        <div class="set-row"><div><div class="set-t">Kuota waktu / perangkat</div><div class="muted">0 = tanpa batas. Lewat batas → auto-putus.</div></div><div class="set-inp"><input id="s-min" class="input" type="number" min="0" value="0"> <span class="muted">menit</span></div></div>
+        <button id="s-save" class="btn btn-primary" style="margin-top:8px">Simpan Kebijakan</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Laporan Pemakaian</h2></div>
+        <div class="hint">Unduh ringkasan semua perangkat: data terpakai, durasi online, situs teratas.</div>
+        <a class="btn btn-primary" href="/api/report.csv" download>⬇ Export CSV</a>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Ad / Tracker Blocking</h2></div>
+        <div class="hint">Aktifkan kategori <b>Iklan & Tracker</b> di tab <b>Blokir Situs</b> untuk memblokir iklan se-jaringan (perangkat yang Dikelola/Diawasi).</div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>Fitur Lanjutan</h2></div>
+        <div class="hint">Blokir situs & batasi kecepatan butuh laptop jadi perantara (MITM) + IP forwarding Windows. Mungkin perlu <b>1x restart PC</b>.</div>
+        <button id="btn-fwd" class="btn btn-primary">Aktifkan IP Forwarding</button>
+        <span id="fwd-stat" class="muted" style="margin-left:12px">belum diaktifkan</span>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Jadwal (Parental Control)</h2></div>
+        <div id="sched-list" class="sched-list"><div class="empty">Belum ada jadwal. Tambah dari kartu perangkat → ⏰.</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Tentang</h2></div>
+        <div class="muted" id="about">NetHawk — network control suite</div>
+        <button id="btn-quit" class="btn btn-danger" style="margin-top:14px">⏻ Matikan NetHawk (stop server)</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

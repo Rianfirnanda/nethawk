@@ -1,0 +1,10 @@
+# NetHawk - dependencies (web edition)
+# Install: python -m pip install -r requirements.txt
+
+scapy>=2.5.0           # ARP scan + spoofing (butuh Npcap di Windows)
+aiohttp>=3.9.0         # web server (HTTP + WebSocket) untuk UI browser
+psutil>=5.9.0          # throughput jaringan
+mac-vendor-lookup>=0.1.12   # deteksi vendor dari MAC (OUI)
+
+# Fitur lanjutan (throttle & blokir situs) - Windows saja
+pydivert>=2.1.0 ; sys_platform == "win32"
